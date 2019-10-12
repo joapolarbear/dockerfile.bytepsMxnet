@@ -137,10 +137,10 @@ RUN git clone --single-branch --branch byteps --recurse-submodules $MXNET_SERVER
 # ARG FRAMEWORK_VERSION=1.5.0
 # RUN python -m pip --no-cache-dir install mxnet-cu100==$FRAMEWORK_VERSION && \
 #     pip3 --no-cache-dir install mxnet-cu100==$FRAMEWORK_VERSION
-ENV MXNET_BUILD_OPTS="USE_OPENCV=1 USE_BLAS=openblas USE_CUDNN=1 USE_CUDA=1 USE_CUDA_PATH=/usr/local/cuda USE_MKLDNN=1 USE_DIST_KVSTORE=1 USE_NCCL=1 USE_NCCL_PATH=/usr/local/nccl USE_RDMA=1 USE_MKL=1" \
+ENV MXNET_BUILD_OPTS="USE_OPENCV=1 USE_BLAS=openblas USE_CUDNN=1 USE_CUDA=1 USE_CUDA_PATH=/usr/local/cuda USE_MKLDNN=1 USE_DIST_KVSTORE=1 USE_NCCL=1 USE_NCCL_PATH=/usr/local/nccl USE_MKL=1" \
     BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git
 
-RUN git clone --single-branch --branch v1.5.x --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
+RUN git clone --single-branch --branch v1.3.x --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
 # RUN git clone --single-branch --branch 1.5.0-v1.0 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet
 RUN cd /root/customized-mxnet && \
     make clean_all && \
@@ -159,7 +159,7 @@ ENV LD_LIBRARY_PATH=/root/customized-mxnet/lib:$LD_LIBRARY_PATH
 RUN MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
     ln -sf /root/customized-mxnet/include $MX_PATH/include 
 
-cp -rf /root/customized-mxnet/lib/lib* /usr/lib/
+# cp -rf /root/customized-mxnet/lib/lib* /usr/lib/
 # cp -rf /root/customized-mxnet/include $MX_PATH/include
 ################################ install your framework ################################
 
