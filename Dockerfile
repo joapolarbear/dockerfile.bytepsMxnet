@@ -14,9 +14,8 @@
 # =============================================================================
 
 FROM nvidia/cuda:10.0-devel-ubuntu16.04
-ENV CUDA_VERSION=10.0
-ARG REGION
 
+ARG REGION
 RUN rm -f /tmp/pip.conf &&\
     echo -e '[global]\nindex-url = https://pypi.douban.com/simple' >> /tmp/pip.conf
 
@@ -27,13 +26,26 @@ ENV USE_CUDA_PATH=/usr/local/cuda:/usr/local/cudnn/lib64 \
     LD_LIBRARY_PATH=/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/nccl/lib:$LD_LIBRARY_PATH \
     LIBRARY_PATH=/usr/local/lib:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:$LIBRARY_PATH 
 
-ENV BYTEPS_BASE_PATH=/usr/local \
+ENV BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git \
+    BYTEPS_SERVER_MXNET_PATH=/root/incubator-mxnet \
+    SERVER_BUILD_OPTS="USE_BLAS=openblas USE_MKL=1 USE_DIST_KVSTORE=1" \
+    MXNET_BUILD_OPTS="USE_OPENCV=1 \
+        USE_BLAS=openblas \
+        USE_CUDNN=1 \
+        USE_CUDA=1 \
+        USE_CUDA_PATH=/usr/local/cuda \
+        USE_MKLDNN=0 \
+        USE_DIST_KVSTORE=1 \
+        USE_NCCL=1 \
+        USE_NCCL_PATH=/usr/local/nccl" \
+    BYTEPS_BASE_PATH=/usr/local \
     BYTEPS_PATH=$BYTEPS_BASE_PATH/byteps \
-    BYTEPS_GIT_LINK=https://github.com/bytedance/byteps
+    BYTEPS_GIT_LINK=https://github.com/joapolarbear/byteps.git
 
-# ARG CUDNN_VERSION=7.4.1.5-1+cuda$CUDA_VERSION
-ARG CUDNN_VERSION=7.6.0.64-1+cuda$CUDA_VERSION
+ENV NCCL_VERSION=d7a58cfa5865c4f627a128c3238cc72502649881 \
+    CUDNN_VERSION=7.6.0.64-1+cuda10.0
 
+# ----------------------------- Install dependencies -----------------------------
 RUN apt-get update &&\
     apt-get install -y --allow-unauthenticated --allow-downgrades --allow-change-held-packages --no-install-recommends --fix-missing \
         build-essential \
@@ -67,7 +79,6 @@ RUN apt-get update &&\
         python3-pip \
         python3-setuptools
 
-
 RUN python -m pip install --upgrade pip &&\
     pip --no-cache-dir install \
         matplotlib \
@@ -82,7 +93,7 @@ RUN python -m pip install --upgrade pip &&\
 RUN pip3 install --upgrade pip &&\
     python3 -m pip --no-cache-dir install \
         matplotlib \
-        numpy==1.15.2 \
+        numpy==1.17.2 \
         scipy \
         sklearn \
         pandas \
@@ -90,9 +101,7 @@ RUN pip3 install --upgrade pip &&\
         mxboard \
         tensorboard==1.0.0a6
 
-# Install NCCL
-ENV NCCL_VERSION=d7a58cfa5865c4f627a128c3238cc72502649881
-
+# ----------------------------- Install NCCL -----------------------------
 RUN cd / && \
     wget -q -O - https://github.com/NVIDIA/nccl/archive/$NCCL_VERSION.tar.gz | tar -xzf - && \
     cd nccl-$NCCL_VERSION && make -j src.build && make pkg.txz.build && \
@@ -103,59 +112,23 @@ RUN cd / && \
 
 WORKDIR /root/
 
-# RUN echo "/usr/local/cuda/lib64" >> /etc/ld.so.conf.d/cuda.conf && \
-#     echo "/usr/local/cudnn/lib64" >> /etc/ld.so.conf.d/cuda.conf && \
-#     echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
-#     echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf && \
-#     ldconfig
 
-# RUN ln -sf /usr/local/cudnn/include/cudnn.h /usr/local/cuda/include/ && \
-#     ln -sf /usr/local/cudnn/lib64/libcudnn* /usr/local/cuda/lib64 &&\
-#     ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/libcuda.so && \
-#     ln -sf /usr/local/cuda/lib64/libcuda.so /usr/local/cuda/lib64/libcuda.so.1
-
-
-############ build server
+# -----------------------------  Build server -----------------------------
 # To enable RDMA, add `USE_RDMA=1` to `SERVER_BUILD_OPTS` below.
-ENV SERVER_BUILD_OPTS="USE_BLAS=openblas USE_MKL=1 USE_DIST_KVSTORE=1" \
-    BYTEPS_SERVER_MXNET_PATH=/root/incubator-mxnet \
-    MXNET_SERVER_LINK=https://github.com/bytedance/incubator-mxnet
 
-ENV BYTEPS_BASE_PATH=/usr/local \
-    BYTEPS_PATH=$BYTEPS_BASE_PATH/byteps \
-    BYTEPS_GIT_LINK=https://github.com/joapolarbear/byteps
+RUN git clone --single-branch --branch byteprofile_bps --recurse-submodules $BYTEPS_SERVER_MXNET_LINK incubator-mxnet && \
+    cd $BYTEPS_SERVER_MXNET_PATH && \
+    make clean_all && make -j16 $SERVER_BUILD_OPTS
 
-WORKDIR /root/
-
-RUN git clone --single-branch --branch byteps --recurse-submodules $MXNET_SERVER_LINK
-
-# RUN cd $BYTEPS_SERVER_MXNET_PATH && \
-#     make clean_all && make -j16 $SERVER_BUILD_OPTS
-
-################################ install your framework ################################
-# install mxnet
-# ARG FRAMEWORK_VERSION=1.5.0
-# RUN python -m pip --no-cache-dir install mxnet-cu100==$FRAMEWORK_VERSION && \
-#     pip3 --no-cache-dir install mxnet-cu100==$FRAMEWORK_VERSION
-ENV MXNET_BUILD_OPTS="USE_OPENCV=1 \
-        USE_BLAS=openblas \
-        USE_CUDNN=1 \
-        USE_CUDA=1 \
-        USE_CUDA_PATH=/usr/local/cuda \
-        USE_MKLDNN=0 \
-        USE_DIST_KVSTORE=1 \
-        USE_NCCL=1 \
-        USE_NCCL_PATH=/usr/local/nccl" \
-    BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git
+# ----------------------------- install your framework -----------------------------
 
 # RUN git clone --single-branch --branch 1.5.0 --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
-RUN git clone --single-branch --branch 1.5.0-v1.0 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet
-RUN cd /root/customized-mxnet && \
-    make clean_all && \
-    make -j16 $MXNET_BUILD_OPTS 
-# huhanpeng: USE_MKL or not 
+#? huhanpeng: USE_MKL or not 
+RUN git clone --single-branch --branch 1.5.0-v1.0 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
+    cd /root/customized-mxnet && \
+    make clean_all && make -j16 $MXNET_BUILD_OPTS 
 
-# python3 required
+#！ python3 required
 RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     cd /root/customized-mxnet/python && \
     python3 setup.py build && \
@@ -163,17 +136,11 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     python3 setup.py bdist_wheel && \
     cd /root
 
-# ENV LD_LIBRARY_PATH=/root/customized-mxnet/lib:$LD_LIBRARY_PATH 
 RUN MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
     ln -sf /root/customized-mxnet/include $MX_PATH/include 
 
-# cp -rf /root/customized-mxnet/lib/lib* /usr/lib/
-# cp -rf /root/customized-mxnet/include $MX_PATH/include
-################################ install your framework ################################
-
-
-#------------------ config gcc
-# Pin GCC to 4.9 (priority 200) to compile correctly against TensorFlow, PyTorch, and MXNet.
+# ----------------------------- Install byteps worker -----------------------------
+#！ Pin GCC to 4.9 (priority 200) to compile correctly against TensorFlow, PyTorch, and MXNet.
 RUN update-alternatives --install /usr/bin/gcc gcc $(readlink -f $(which gcc)) 100 && \
     update-alternatives --install /usr/bin/x86_64-linux-gnu-gcc x86_64-linux-gnu-gcc $(readlink -f $(which gcc)) 100 && \
     update-alternatives --install /usr/bin/g++ g++ $(readlink -f $(which g++)) 100 && \
@@ -183,20 +150,20 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 200 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 200 && \
     update-alternatives --install /usr/bin/x86_64-linux-gnu-g++ x86_64-linux-gnu-g++ /usr/bin/g++-4.9 200
 
-
 RUN cd $BYTEPS_BASE_PATH && \
-    git clone --single-branch --branch byteps_profiler --recurse-submodules https://github.com/joapolarbear/byteps.git
-# git clone --recurse-submodules $BYTEPS_GIT_LINK
-# Install BytePS
-ARG BYTEPS_NCCL_LINK=shared
+    git clone --single-branch --branch byteprofile --recurse-submodules https://github.com/joapolarbear/byteps.git
+#！ Install BytePS
 RUN cd $BYTEPS_PATH &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py bdist_wheel
-RUN cd $BYTEPS_PATH &&\
-    BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python setup.py install &&\
-    BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python setup.py bdist_wheel
+
+#! No python2 for now
+# RUN cd $BYTEPS_PATH &&\
+#     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python setup.py install &&\
+#     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python setup.py bdist_wheel
 
 RUN update-alternatives --remove gcc /usr/bin/gcc-4.9 && \
     update-alternatives --remove x86_64-linux-gnu-gcc /usr/bin/gcc-4.9 && \
     update-alternatives --remove g++ /usr/bin/g++-4.9 && \
     update-alternatives --remove x86_64-linux-gnu-g++ /usr/bin/g++-4.9
+
