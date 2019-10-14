@@ -45,15 +45,24 @@ ENV BYTEPS_BASE_PATH=/usr/local \
 
 WORKDIR /root/
 
-ENV MXNET_BUILD_OPTS="USE_OPENCV=1 USE_BLAS=openblas USE_CUDNN=1 USE_CUDA=1 USE_CUDA_PATH=/usr/local/cuda USE_MKLDNN=1 USE_DIST_KVSTORE=1 USE_NCCL=1 USE_NCCL_PATH=/usr/local/nccl USE_MKL=1" \
+# huhanpeng: USE_MKL or not 
+ENV MXNET_BUILD_OPTS="USE_OPENCV=1 \
+        USE_BLAS=openblas \
+        USE_CUDNN=1 \
+        USE_CUDA=1 \
+        USE_CUDA_PATH=/usr/local/cuda \
+        USE_MKLDNN=0 \
+        USE_DIST_KVSTORE=1 \
+        USE_NCCL=1 \
+        USE_NCCL_PATH=/usr/local/nccl" \
     BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git
 
-RUN git clone --single-branch --branch 1.5.0 --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
+RUN git clone --single-branch --branch v1.5.x --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
 # RUN git clone --single-branch --branch 1.5.0-v1.0 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet
 RUN cd /root/customized-mxnet && \
     make clean_all && \
     make -j16 $MXNET_BUILD_OPTS 
-# huhanpeng: USE_MKL or not 
+
 
 # python3 required
 RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
