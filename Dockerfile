@@ -13,7 +13,8 @@
 # limitations under the License.
 # =============================================================================
 
-FROM nvidia/cuda:10.0-devel-ubuntu16.04
+# FROM nvidia/cuda:10.0-devel-ubuntu16.04
+FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
 
 ARG REGION
 RUN rm -f /tmp/pip.conf &&\
@@ -68,9 +69,7 @@ RUN apt-get update &&\
         libpng-dev \
         iftop \
         lsb-release \
-        libcudnn7=${CUDNN_VERSION} \
-        libcudnn7-dev=${CUDNN_VERSION} \
-          libnuma-dev \
+        libnuma-dev \
         gcc-4.9 \
         g++-4.9 \
         gcc-4.9-base \
@@ -78,6 +77,10 @@ RUN apt-get update &&\
         python3-dev \
         python3-pip \
         python3-setuptools
+
+# RUN apt-get install -y --allow-unauthenticated --allow-downgrades --allow-change-held-packages --no-install-recommends --fix-missing \
+#         libcudnn7=${CUDNN_VERSION} \
+#         libcudnn7-dev=${CUDNN_VERSION} 
 
 RUN python -m pip install --upgrade pip &&\
     pip --no-cache-dir install \
