@@ -52,8 +52,8 @@ ENV MXNET_BUILD_OPTS="USE_OPENCV=1 \
         USE_NCCL_PATH=/usr/local/nccl" \
     BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git
 
-RUN git clone --single-branch --branch v1.5.x --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
-# RUN git clone --single-branch --branch 1.5.0-v1.0 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet
+# RUN git clone --single-branch --branch v1.5.x --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
+RUN git clone --single-branch --branch byteprofile --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet
 RUN cd /root/customized-mxnet && \
     make clean_all && \
     make -j16 $MXNET_BUILD_OPTS 
@@ -67,7 +67,6 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     python3 setup.py bdist_wheel && \
     cd /root
 
-ENV LD_LIBRARY_PATH=/root/customized-mxnet/lib:$LD_LIBRARY_PATH 
 RUN MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
     ln -sf /root/customized-mxnet/include $MX_PATH/include 
 
