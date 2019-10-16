@@ -139,6 +139,9 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     python3 setup.py bdist_wheel && \
     cd /root
 
+#! if dubuging using line by line, this line can be commented.
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libcuda.so /usr/local/cuda/lib64/libcuda.so.1 && \
+
 RUN MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
     ln -sf /root/customized-mxnet/include $MX_PATH/include 
 
