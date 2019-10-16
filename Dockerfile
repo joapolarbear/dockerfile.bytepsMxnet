@@ -29,7 +29,7 @@ ENV USE_CUDA_PATH=/usr/local/cuda:/usr/local/cudnn/lib64 \
 
 ENV BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git \
     BYTEPS_SERVER_MXNET_PATH=/root/incubator-mxnet \
-    SERVER_BUILD_OPTS="USE_BLAS=openblas USE_MKL=1 USE_DIST_KVSTORE=1" \
+    SERVER_BUILD_OPTS="USE_BLAS=openblas USE_MKL=1 USE_MKLDNN=0 USE_DIST_KVSTORE=1" \
     MXNET_BUILD_OPTS="USE_OPENCV=1 \
         USE_BLAS=openblas \
         USE_CUDNN=1 \
