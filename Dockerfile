@@ -40,7 +40,7 @@ ENV BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator
         USE_NCCL=1 \
         USE_NCCL_PATH=/usr/local/nccl" \
     BYTEPS_BASE_PATH=/usr/local \
-    BYTEPS_PATH=$BYTEPS_BASE_PATH/byteps \
+    BYTEPS_PATH=${BYTEPS_BASE_PATH}/byteps \
     BYTEPS_GIT_LINK=https://github.com/joapolarbear/byteps.git
 
 ENV NCCL_VERSION=d7a58cfa5865c4f627a128c3238cc72502649881 \
@@ -136,12 +136,9 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     cd /root/customized-mxnet/python && \
     python3 setup.py build && \
     python3 setup.py install &&\
-    python3 setup.py bdist_wheel && \
-    cd /root
+    python3 setup.py bdist_wheel
 
-#! if dubuging using line by line, this line can be commented.
-RUN ln -sf /usr/lib/x86_64-linux-gnu/libcuda.so /usr/local/cuda/lib64/libcuda.so.1 && \
-
+ENV LD_LIBRARY_PATH=/usr/local/cuda-10.0/compat/:${LD_LIBRARY_PATH}
 RUN MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
     ln -sf /root/customized-mxnet/include $MX_PATH/include 
 
