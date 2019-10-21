@@ -154,7 +154,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 200 && \
     update-alternatives --install /usr/bin/x86_64-linux-gnu-g++ x86_64-linux-gnu-g++ /usr/bin/g++-4.9 200
 
 RUN cd $BYTEPS_BASE_PATH && \
-    git clone --single-branch --branch byteprofile --recurse-submodules https://github.com/joapolarbear/byteps.git
+    git clone --single-branch --branch v1.0 --recurse-submodules https://github.com/joapolarbear/byteps.git
 #！ Install BytePS
 RUN cd $BYTEPS_PATH &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install &&\
