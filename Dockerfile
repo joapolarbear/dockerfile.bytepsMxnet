@@ -127,7 +127,7 @@ RUN git clone --single-branch --branch byteprofile_bps --recurse-submodules $BYT
 
 # RUN git clone --single-branch --branch 1.5.0 --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
 #? huhanpeng: USE_MKL or not 
-RUN git clone --single-branch --branch 1.5.0-v1.0 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
+RUN git clone --single-branch --branch 1.5.0-v1.1 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
     cd /root/customized-mxnet && \
     make clean_all && make -j16 $MXNET_BUILD_OPTS 
 
@@ -154,7 +154,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 200 && \
     update-alternatives --install /usr/bin/x86_64-linux-gnu-g++ x86_64-linux-gnu-g++ /usr/bin/g++-4.9 200
 
 RUN cd $BYTEPS_BASE_PATH && \
-    git clone --single-branch --branch v1.0 --recurse-submodules https://github.com/joapolarbear/byteps.git
+    git clone --single-branch --branch byteprofile --recurse-submodules https://github.com/joapolarbear/byteps.git
 #！ Install BytePS
 RUN cd $BYTEPS_PATH &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install &&\
