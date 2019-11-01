@@ -125,7 +125,7 @@ RUN git clone --single-branch --branch byteprofile_bps --recurse-submodules $BYT
 # ----------------------------- install your framework -----------------------------
 
 #! tag:1.5.0-v1.1, customized MXNet for Cluon API
-RUN git clone --single-branch --branch 1.5.0-v1.1 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
+RUN git clone --single-branch --branch 1.5.0-v1.1.1 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
     cd /root/customized-mxnet && \
     make clean_all && make -j16 $MXNET_BUILD_OPTS 
 
