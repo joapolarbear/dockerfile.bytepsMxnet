@@ -153,7 +153,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 200 && \
 
 #！ Install BytePS
 RUN cd $BYTEPS_BASE_PATH && \
-    git clone --single-branch --branch v1.1 --recurse-submodules https://github.com/joapolarbear/byteps.git && \
+    git clone --single-branch --branch v1.1.2 --recurse-submodules https://github.com/joapolarbear/byteps.git && \
     cd $BYTEPS_PATH && \
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py bdist_wheel
