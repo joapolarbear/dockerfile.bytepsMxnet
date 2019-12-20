@@ -143,30 +143,10 @@ RUN MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.spli
     ln -sf /root/customized-mxnet/include $MX_PATH/include 
 
 # ----------------------------- Install byteps worker -----------------------------
-#！ Pin GCC to 4.9 (priority 200) to compile correctly against TensorFlow, PyTorch, and MXNet.
-RUN update-alternatives --install /usr/bin/gcc gcc $(readlink -f $(which gcc)) 100 && \
-    update-alternatives --install /usr/bin/x86_64-linux-gnu-gcc x86_64-linux-gnu-gcc $(readlink -f $(which gcc)) 100 && \
-    update-alternatives --install /usr/bin/g++ g++ $(readlink -f $(which g++)) 100 && \
-    update-alternatives --install /usr/bin/x86_64-linux-gnu-g++ x86_64-linux-gnu-g++ $(readlink -f $(which g++)) 100
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 200 && \
-    update-alternatives --install /usr/bin/x86_64-linux-gnu-gcc x86_64-linux-gnu-gcc /usr/bin/gcc-4.9 200 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 200 && \
-    update-alternatives --install /usr/bin/x86_64-linux-gnu-g++ x86_64-linux-gnu-g++ /usr/bin/g++-4.9 200
-
 RUN cd $BYTEPS_BASE_PATH && \
     git clone --single-branch --branch v1.0 --recurse-submodules https://github.com/joapolarbear/byteps.git
 #！ Install BytePS
 RUN cd $BYTEPS_PATH &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py bdist_wheel
-
-#! No python2 for now
-# RUN cd $BYTEPS_PATH &&\
-#     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python setup.py install &&\
-#     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python setup.py bdist_wheel
-
-RUN update-alternatives --remove gcc /usr/bin/gcc-4.9 && \
-    update-alternatives --remove x86_64-linux-gnu-gcc /usr/bin/gcc-4.9 && \
-    update-alternatives --remove g++ /usr/bin/g++-4.9 && \
-    update-alternatives --remove x86_64-linux-gnu-g++ /usr/bin/g++-4.9
 
