@@ -117,17 +117,15 @@ WORKDIR /root/
 
 
 # -----------------------------  Build server -----------------------------
-# To enable RDMA, add `USE_RDMA=1` to `SERVER_BUILD_OPTS` below.
-
+#! To enable RDMA, add `USE_RDMA=1` to `SERVER_BUILD_OPTS` below.
 RUN git clone --single-branch --branch byteprofile_bps --recurse-submodules $BYTEPS_SERVER_MXNET_LINK incubator-mxnet && \
     cd $BYTEPS_SERVER_MXNET_PATH && \
     make clean_all && make -j16 $SERVER_BUILD_OPTS
 
 # ----------------------------- install your framework -----------------------------
 
-# RUN git clone --single-branch --branch 1.5.0 --recurse-submodules https://github.com/apache/incubator-mxnet.git customized-mxnet
-#? huhanpeng: USE_MKL or not 
-RUN git clone --single-branch --branch 1.5.0-v1.0 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
+#! tag:1.5.0-v1.1, customized MXNet for Cluon API
+RUN git clone --single-branch --branch 1.5.0-v1.1.1 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
     cd /root/customized-mxnet && \
     make clean_all && make -j16 $MXNET_BUILD_OPTS 
 
@@ -143,10 +141,10 @@ RUN MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.spli
     ln -sf /root/customized-mxnet/include $MX_PATH/include 
 
 # ----------------------------- Install byteps worker -----------------------------
-RUN cd $BYTEPS_BASE_PATH && \
-    git clone --single-branch --branch v1.0 --recurse-submodules https://github.com/joapolarbear/byteps.git
 #！ Install BytePS
-RUN cd $BYTEPS_PATH &&\
+RUN cd $BYTEPS_BASE_PATH && \
+    git clone --single-branch --branch v1.1.2 --recurse-submodules https://github.com/joapolarbear/byteps.git && \
+    cd $BYTEPS_PATH && \
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install &&\
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py bdist_wheel
 
