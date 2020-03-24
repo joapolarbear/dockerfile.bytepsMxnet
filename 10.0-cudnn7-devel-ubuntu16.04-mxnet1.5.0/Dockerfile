@@ -23,7 +23,8 @@ ENV USE_CUDA_PATH=/usr/local/cuda:/usr/local/cudnn/lib64 \
     LD_LIBRARY_PATH=/usr/local/cuda-10.0/compat/:/usr/lib/x86_64-linux-gnu:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/nccl/lib:$LD_LIBRARY_PATH \
     LIBRARY_PATH=/usr/local/lib:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/nccl/lib/:$LIBRARY_PATH
 
-ENV MXNET_BUILD_OPTS="USE_OPENCV=1 \
+ENV BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git \
+    MXNET_BUILD_OPTS="USE_OPENCV=1 \
         USE_BLAS=openblas \
         USE_CUDNN=1 \
         USE_CUDA=1 \
