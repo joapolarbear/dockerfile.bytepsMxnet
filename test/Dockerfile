@@ -24,8 +24,7 @@ ENV CUDA_VERSION=10.0 \
     BYTEPS_GIT_LINK=https://github.com/bytedance/byteps \
     CUDNN_VERSION=7.6.0.64-1+cuda$CUDA_VERSION
 
-RUN export https_proxy=http://10.8.77.222:8118 http_proxy=http://10.8.77.222:8118 && 、
-    apt-get install -y --allow-unauthenticated --allow-downgrades --allow-change-held-packages --no-install-recommends --fix-missing \
+RUN apt-get install -y --allow-unauthenticated --allow-downgrades --allow-change-held-packages --no-install-recommends --fix-missing \
         libcudnn7=${CUDNN_VERSION} \
         libcudnn7-dev=${CUDNN_VERSION} 
 
