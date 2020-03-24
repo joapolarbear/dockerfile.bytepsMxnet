@@ -125,7 +125,7 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
 # ----------------------------- Install BytePS -----------------------------
 #！ Install BytePS
 RUN cd $BYTEPS_BASE_PATH && \
-    git clone --single-branch --branch v1.1.2 --recurse-submodules https://github.com/joapolarbear/byteps.git && \
+    git clone --single-branch --branch byteprofile --recurse-submodules https://github.com/joapolarbear/byteps.git && \
     cd $BYTEPS_PATH && \
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install && \
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py bdist_wheel
