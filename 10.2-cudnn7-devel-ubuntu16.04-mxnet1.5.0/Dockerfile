@@ -13,14 +13,15 @@
 # limitations under the License.
 # =============================================================================
 
-FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
+FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu16.04
 
 RUN rm -f /tmp/pip.conf &&\
     echo -e '[global]\nindex-url = https://pypi.douban.com/simple' >> /tmp/pip.conf
 
 ENV USE_CUDA_PATH=/usr/local/cuda:/usr/local/cudnn/lib64 \
     PATH=/usr/local/cuda/bin:/usr/local/nvidia/bin:${PATH} \
-    LD_LIBRARY_PATH=/usr/local/cuda-10.0/compat/:/usr/lib/x86_64-linux-gnu:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/nccl/lib:$LD_LIBRARY_PATH \
+    OLD_LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/nccl/lib:$LD_LIBRARY_PATH \
+    LD_LIBRARY_PATH=/usr/local/cuda-10.2/compat/:$OLD_LD_LIBRARY_PATH \
     LIBRARY_PATH=/usr/local/lib:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/nccl/lib/:$LIBRARY_PATH
 
 ENV BYTEPS_SERVER_MXNET_LINK=https://github.com/joapolarbear/bytedance-incubator-mxnet.git \
@@ -79,7 +80,8 @@ RUN python -m pip install --upgrade pip && \
         pandas \
         graphviz==0.9.0 \
         mxboard \
-        tensorboard==1.0.0a6
+        tensorboard==1.0.0a6 \
+        networkx
 
 RUN pip3 install --upgrade pip && \
     python3 -m pip --no-cache-dir install \
@@ -90,15 +92,19 @@ RUN pip3 install --upgrade pip && \
         pandas \
         graphviz==0.9.0 \
         mxboard \
-        tensorboard==1.0.0a6
+        tensorboard==1.0.0a6 \
+        networkx
 
 WORKDIR /root/
+
+RUN git clone https://github.com/NVIDIA/cuda-samples.git
 
 # ----------------------------- Install OpenMPI 4.0.3 -----------------------------
 RUN wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.3.tar.gz && \
     tar -xvf openmpi-* && cd openmpi-* && \
-    ./configure --prefix="/home/$USER/.openmpi" && \
-    make -j && make install 
+    ./configure --prefix="/usr" && \
+    make -j && make all install && \
+    ln -sf /home/$USER/.openmpi/bin/* /usr/bin/
 
 # ----------------------------- Install NCCL -----------------------------
 RUN git clone --recurse-submodules -b byteprofile https://github.com/joapolarbear/nccl.git && \
@@ -119,30 +125,45 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     python3 setup.py build && \
     python3 setup.py install && \
     python3 setup.py bdist_wheel && \
-    MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
-    ln -sf /root/customized-mxnet/include $MX_PATH/include 
+    cd && MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
+    ln -sf /root/customized-mxnet/include $MX_PATH/include && echo $MX_PATH
 
 # ----------------------------- Install BytePS -----------------------------
 #！ Install BytePS
-RUN cd $BYTEPS_BASE_PATH && \
+RUN cd /usr/local && \
     git clone --single-branch --branch byteprofile --recurse-submodules https://github.com/joapolarbear/byteps.git && \
-    cd $BYTEPS_PATH && \
+    cd byteps && \
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py install && \
     BYTEPS_WITHOUT_PYTORCH=1 BYTEPS_WITHOUT_TENSORFLOW=1 python3 setup.py bdist_wheel
 
 # ----------------------------- Install Horovod -----------------------------
-RUN git clone --recurse-submodules -b byteprofile https://github.com/joapolarbear/horovod && \
-    cd /usr/local/horovod && python3 setup.py sdist && \
+RUN cd /usr/local && \
+    git clone --recurse-submodules -b byteprofile https://github.com/joapolarbear/horovod && \
+    cd horovod && python3 setup.py sdist && \
     HOROVOD_NCCL_HOME=/usr/local/nccl \
     HOROVOD_GPU_ALLREDUCE=NCCL \
     HOROVOD_GPU_BROADCAST=NCCL \
     HOROVOD_WITH_MPI=1 \
     HOROVOD_WITHOUT_TENSORFLOW=1 \
     HOROVOD_WITHOUT_PYTORCH=1 \
-    HOROVOD_WITH_MXNET=1 pip3 install --no-cache-dir dist/horovod*
+    HOROVOD_WITH_MXNET=1 pip3 install --no-cache-dir dist/horovod* && \
+    cp -r /usr/local/horovod/examples /root/horovod_examples
 
 # ----------------------------- Install gluon-nlp -----------------------------
 RUN git clone -b bert-byteprofile https://github.com/joapolarbear/gluon-nlp.git && \
-    cd gluon-nlp && python3 setup.py install
+    cd gluon-nlp && python3 setup.py install && \
+    mkdir -p /root/.mxnet/models && \
+    cd /root/.mxnet/models && \
+    wget https://apache-mxnet.s3-accelerate.dualstack.amazonaws.com/gluon/dataset/vocab/book_corpus_wiki_en_uncased-a6607397.zip && \
+    apt-get install -y zip && unzip -o *.zip
+
+### Set the environment for developing.
+ENV LD_LIBRARY_PATH=$OLD_LD_LIBRARY_PATH \
+    BYTEPS_TRACE_ON=1 \
+    BYTEPS_TRACE_END_STEP=30 \
+    BYTEPS_TRACE_START_STEP=10 \
+    BYTEPS_TRACE_DIR=${HOME}/traces \
+    MXNET_GPU_WORKER_NTHREADS=1 \
+    MXNET_EXEC_BULK_EXEC_TRAIN=0
 
 
