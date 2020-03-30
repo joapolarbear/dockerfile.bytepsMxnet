@@ -108,7 +108,7 @@ RUN wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.3.tar.g
 
 # ----------------------------- Install NCCL -----------------------------
 RUN git clone --recurse-submodules -b byteprofile https://github.com/joapolarbear/nccl.git && \
-    cd nccl && make -j src.build && make pkg.txz.build && \
+    cd /root/nccl && make -j src.build && make pkg.txz.build && \
     mkdir -p /usr/local/nccl && \
     tar -Jxf ./build/pkg/txz/nccl*.txz -C /usr/local/nccl/ --strip-components 1 && \
     echo "/usr/local/nccl/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
@@ -139,7 +139,7 @@ RUN cd /usr/local && \
 # ----------------------------- Install Horovod -----------------------------
 RUN cd /usr/local && \
     git clone --recurse-submodules -b byteprofile https://github.com/joapolarbear/horovod && \
-    cd horovod && python3 setup.py sdist && \
+    cd /usr/local/horovod && python3 setup.py sdist && \
     HOROVOD_NCCL_HOME=/usr/local/nccl \
     HOROVOD_GPU_ALLREDUCE=NCCL \
     HOROVOD_GPU_BROADCAST=NCCL \
