@@ -75,7 +75,7 @@ RUN python -m pip install --upgrade pip && \
     pip --no-cache-dir install \
         matplotlib \
         numpy==1.15.2 \
-        scipy==1.3.3 \
+        scipy \
         sklearn \
         pandas \
         graphviz==0.9.0 \
