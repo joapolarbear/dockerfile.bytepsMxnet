@@ -128,6 +128,15 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     cd && MX_PATH=`python3 -c "import mxnet; path=str(mxnet.__path__); print(path.split(\"'\")[1])"` && \
     ln -sf /root/customized-mxnet/include $MX_PATH/include && echo $MX_PATH
 
+# ----------------------------- Install Tensorflow -----------------------------
+RUN TENSORFLOW_VERSION=1.14.0 && \
+    pip3 install numpy \
+        tensorflow-gpu==${TENSORFLOW_VERSION} \
+        keras \
+        h5py && \
+    pip3 install --upgrade protobuf && \
+    ln -sf /usr/local/cuda/lib64/libcupti.so /usr/local/cuda/lib64/libcupti.so.10.0 
+
 # ----------------------------- Install BytePS -----------------------------
 #！ Install BytePS
 RUN cd /usr/local && \
@@ -144,7 +153,7 @@ RUN cd /usr/local && \
     HOROVOD_GPU_ALLREDUCE=NCCL \
     HOROVOD_GPU_BROADCAST=NCCL \
     HOROVOD_WITH_MPI=1 \
-    HOROVOD_WITHOUT_TENSORFLOW=1 \
+    HOROVOD_WITH_TENSORFLOW=1 \
     HOROVOD_WITHOUT_PYTORCH=1 \
     HOROVOD_WITH_MXNET=1 pip3 install --no-cache-dir dist/horovod* && \
     cp -r /usr/local/horovod/examples /root/horovod_examples
