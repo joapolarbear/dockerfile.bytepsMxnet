@@ -69,7 +69,8 @@ RUN apt-get update && \
         python3-pip \
         python3-setuptools \
         ssh \
-        librdmacm-dev
+        librdmacm-dev \
+        zip unzip
 
 RUN python -m pip install --upgrade pip && \
     pip --no-cache-dir install \
@@ -129,13 +130,29 @@ RUN python3 -m pip --no-cache-dir install numpy==1.17.2 && \
     ln -sf /root/customized-mxnet/include $MX_PATH/include && echo $MX_PATH
 
 # ----------------------------- Install Tensorflow -----------------------------
-RUN TENSORFLOW_VERSION=1.14.0 && \
-    pip3 install numpy \
-        tensorflow-gpu==${TENSORFLOW_VERSION} \
-        keras \
-        h5py && \
-    pip3 install --upgrade protobuf && \
-    ln -sf /usr/local/cuda/lib64/libcupti.so /usr/local/cuda/lib64/libcupti.so.10.0 
+### install bazel
+RUN wget https://github.com/bazelbuild/bazel/releases/download/0.24.1/bazel-0.24.1-installer-linux-x86_64.sh && \
+    chmod +x bazel-0.24.1-installer-linux-x86_64.sh && \
+    ./bazel-0.24.1-installer-linux-x86_64.sh --user 
+
+RUN ln -sf /usr/local/cuda/lib64/libcupti.so /usr/local/cuda/lib64/libcupti.so.10.0 && \
+    ln -sf /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcudart.so /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcudart.so.10.0 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcublas.so /usr/lib/x86_64-linux-gnu/libcublas.so.10.0 && \
+    ln -sf /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcufft.so /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcufft.so.10.0 && \
+    ln -sf /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcurand.so /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcurand.so.10.0 && \
+    ln -sf /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcusolver.so /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcusolver.so.10.0 && \
+    ln -sf /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcusparse.so /usr/local/cuda-10.2/targets/x86_64-linux/lib/libcusparse.so.10.0
+
+RUN pip3 install keras==2.1.5 gast==0.2.2 && \
+    pip3 install -U --user pip six 'numpy<1.19.0' wheel setuptools mock 'future>=0.17.1' && \
+    pip3 install -U --user keras_applications --no-deps && \
+    pip3 install -U --user keras_preprocessing --no-deps && \
+    ln -sf /usr/bin/python3 /usr/bin/python && \
+    git clone --recurse-submodules -b r1.14 https://github.com/joapolarbear/tensorflow.git  && \
+    cd tensorflow && /root/bin/bazel build -j auto --config=opt --config=cuda //tensorflow/tools/pip_package:build_pip_package && \
+    ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg && \
+    pip3 --no-cache-dir install /tmp/tensorflow_pkg/tensorflow-1.14.1-cp35-cp35m-linux_x86_64.whl 
+    
 
 # ----------------------------- Install BytePS -----------------------------
 #！ Install BytePS
@@ -163,8 +180,7 @@ RUN git clone -b bert-byteprofile https://github.com/joapolarbear/gluon-nlp.git 
     cd gluon-nlp && python3 setup.py install && \
     mkdir -p /root/.mxnet/models && \
     cd /root/.mxnet/models && \
-    wget https://apache-mxnet.s3-accelerate.dualstack.amazonaws.com/gluon/dataset/vocab/book_corpus_wiki_en_uncased-a6607397.zip && \
-    apt-get install -y zip && unzip -o *.zip
+    wget https://apache-mxnet.s3-accelerate.dualstack.amazonaws.com/gluon/dataset/vocab/book_corpus_wiki_en_uncased-a6607397.zip && unzip -o *.zip
 
 ### Set the environment for developing.
 ENV LD_LIBRARY_PATH=$OLD_LD_LIBRARY_PATH \
