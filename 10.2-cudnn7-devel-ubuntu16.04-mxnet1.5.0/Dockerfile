@@ -116,7 +116,7 @@ RUN git clone --recurse-submodules -b byteprofile https://github.com/joapolarbea
     ldconfig && ln -sf /usr/local/nccl/include/* /usr/include/
 
 # ----------------------------- Install MXNet -----------------------------
-RUN git clone --single-branch --branch 1.5.0-v1.1.1 --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
+RUN git clone --single-branch --branch byteprofile --recurse-submodules $BYTEPS_SERVER_MXNET_LINK customized-mxnet && \
     cd /root/customized-mxnet && \
     make clean_all && make -j16 $MXNET_BUILD_OPTS 
 
@@ -190,5 +190,9 @@ ENV LD_LIBRARY_PATH=$OLD_LD_LIBRARY_PATH \
     BYTEPS_TRACE_DIR=/root/traces \
     MXNET_GPU_WORKER_NTHREADS=1 \
     MXNET_EXEC_BULK_EXEC_TRAIN=0
+
+# -------- install byteprofile analysis
+RUN git clone --recurse-submodules https://github.com/joapolarbear/byteprofile-analysis.git && \
+    cd byteprofile-analysis && python3 setup.py install
 
 
