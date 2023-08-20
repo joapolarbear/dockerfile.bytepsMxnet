@@ -18,8 +18,7 @@ FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu16.04
 RUN rm -f /tmp/pip.conf &&\
     echo -e '[global]\nindex-url = https://pypi.douban.com/simple' >> /tmp/pip.conf
 
-ENV USE_CUDA_PATH=/usr/local/cuda:/usr/local/cudnn/lib64 \
-    PATH=/usr/local/cuda/bin:/usr/local/nvidia/bin:${PATH} \
+ENV PATH=/usr/local/cuda/bin:/usr/local/nvidia/bin:${PATH} \
     OLD_LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/nccl/lib:$LD_LIBRARY_PATH \
     LD_LIBRARY_PATH=/usr/local/cuda-10.2/compat/:$OLD_LD_LIBRARY_PATH \
     LIBRARY_PATH=/usr/local/lib:/usr/local/cudnn/lib64:/usr/local/cuda/lib64:/usr/local/nccl/lib/:$LIBRARY_PATH
